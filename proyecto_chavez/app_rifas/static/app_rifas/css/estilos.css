@@ -1,0 +1,19 @@
+.custom-navbar-title {
+    font-family: 'Roboto'; /* O cualquier fuente que prefieras */
+    font-size: 2rem; /* Tamaño más grande */
+    font-weight: bold;
+    text-align: center;
+}
+
+.progress {
+  border-radius: 1rem;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.progress-bar {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 25px;
+  text-align: center;
+}
+
