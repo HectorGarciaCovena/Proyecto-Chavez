@@ -85,3 +85,45 @@
   font-size: 1rem;
   border-radius: 5px;
 }
+
+/* Fondo negro puro para el nav */
+.custom-navbar {
+  background-color: #070707 !important; /* mismo fondo que el logo */
+}
+
+.navbar-logo {
+  height: 120px;
+  width: auto;
+  max-width: 100%;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+/* Pantallas medianas (tablets, < 992px) */
+@media (max-width: 991.98px) {
+  .navbar-logo {
+    height: 80px;
+  }
+}
+
+/* Pantallas pequeñas (celulares, < 768px) */
+@media (max-width: 767.98px) {
+  .navbar-logo {
+    height: 60px;
+  }
+}
+
+/* Muy pequeñas (por ejemplo, < 480px) */
+@media (max-width: 479.98px) {
+  .navbar-logo {
+    height: 50px;
+  }
+}
+
+/* Animación al pasar el mouse */
+.navbar-logo:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+
+

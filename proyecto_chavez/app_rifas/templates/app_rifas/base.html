@@ -18,9 +18,12 @@
 <body>
 
     <!-- Navbar -->
-<nav class="navbar navbar-dark bg-success">
+<!-- Navbar -->
+<nav class="navbar custom-navbar">
   <div class="container justify-content-center">
-    <a class="navbar-brand mx-auto custom-navbar-title" href="{% url 'home' %}">Rifas Chávez</a>
+    <a class="navbar-brand mx-auto" href="{% url 'home' %}">
+      <img src="{% static 'app_rifas/img/logo.png' %}" class="navbar-logo">
+    </a>
   </div>
 </nav>
 
