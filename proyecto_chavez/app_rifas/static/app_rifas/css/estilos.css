@@ -17,3 +17,71 @@
   text-align: center;
 }
 
+.custom-navbar-bg {
+    background-color: #23031b !important; /* Azul celeste brillante */
+}
+
+.custom-navbar-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  font-weight: bold;
+  color: white;
+  transition: transform 0.3s ease;
+}
+
+.custom-navbar-title:hover {
+  transform: scale(1.05);
+  text-decoration: none;
+}
+
+.premios-section h2,
+.premios-section h3 {
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 1px;
+  font-style: italic
+}
+
+.premios-numeros span {
+  display: inline-block;
+  min-width: 80px;
+  padding: 0.5rem 0;
+  font-family: 'Oswald', sans-serif;
+  font-style: italic
+}
+
+.how-to p {
+  max-width: 800px;
+  margin: 0.5rem auto;
+  font-size: 1rem;
+}
+
+.paquete-card {
+  border-radius: 10px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.paquete-card:hover {
+  transform: scale(1.02);
+}
+
+.paquete-card h4 {
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 1px;
+}
+
+.destacado {
+  position: relative;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+}
+
+.destacado p {
+  font-weight: 500;
+}
+
+.custom-input {
+  width: 120px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: 5px;
+}

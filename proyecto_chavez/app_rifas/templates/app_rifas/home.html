@@ -62,5 +62,104 @@ ACTIVIDAD #30</h1>
   </div>
 </div>
 
+<section class="premios-section text-center my-5">
+  <h2 class="fw-bold text-uppercase">¡Premios Instantáneos!</h2>
+  <p class="mt-3">¡Hay 10 números bendecidos con premios en efectivo! Realiza tu compra y revisa si tienes uno de los siguientes números:</p>
+
+  <div class="row justify-content-center mt-4 mb-5">
+    <div class="col-md-10">
+      <div class="d-flex flex-wrap justify-content-center gap-4 fw-bold fs-4 premios-numeros">
+        <!-- Estos números pueden venir luego del backend -->
+        <!-- {% for numero in numeros_premiados %}<span>{{ numero }}</span>{% endfor %} -->
+        <span>18760</span> <span>25381</span> <span>31907</span> <span>47951</span> <span>59650</span>
+        <span>64168</span> <span>74765</span> <span>80573</span> <span>95932</span> <span>08180</span>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="fw-bold text-uppercase">¿Cómo participar?</h3>
+  <div class="how-to mt-3 text-muted">
+    <p>1. Selecciona el paquete de números que desees, recuerda que mientras más números tengas, más oportunidades tendrás de ganar.</p>
+    <p>2. Serás redirigido a una página donde seleccionarás tu forma de pago y llenarás tus datos.</p>
+    <p>3. Una vez realizado el pago, automáticamente y de manera aleatoria se asignarán tus números. Los recibirás por correo y también estarán disponibles en el apartado “Consulta tus números”.</p>
+  </div>
+
+  <a href="#" class="btn btn-dark mt-4 px-4 py-2 fw-bold text-uppercase">Video tutorial de compra</a>
+</section>
+
+<section class="container my-5 text-center">
+  <h2 class="fw-bold text-uppercase">¡Adquiere tus números!</h2>
+  <p class="text-uppercase text-muted">Valor de la unidad: $1</p>
+
+  <div class="row mt-4 gy-4">
+
+    <!-- Paquete 1 -->
+    <div class="col-md-4">
+      <div class="paquete-card p-4 bg-light h-100 border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">x10 números</h4>
+        <p class="fs-4">$10</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+    <!-- Paquete 2 -->
+    <div class="col-md-4">
+      <div class="paquete-card p-4 bg-light h-100 border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">x15 números</h4>
+        <p class="fs-4">$15</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+    <!-- Paquete más vendido -->
+    <div class="col-md-4">
+      <div class="paquete-card destacado p-4 bg-light h-100 border border-3 border-dark">
+        <p class="text-muted small mb-1">★ Más Vendido ★</p>
+        <h4 class="fw-bold fst-italic text-uppercase">x20 números</h4>
+        <p class="fs-4">$20</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+    <!-- Segunda fila -->
+    <div class="col-md-4">
+      <div class="paquete-card p-4 bg-light h-100 border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">x30 números</h4>
+        <p class="fs-4">$30</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="paquete-card p-4 bg-light h-100 border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">x50 números</h4>
+        <p class="fs-4">$50</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="paquete-card p-4 bg-light h-100 border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">x100 números</h4>
+        <p class="fs-4">$100</p>
+        <a href="#" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</a>
+      </div>
+    </div>
+
+  <div class="row mt-5">
+  <div class="col-12">
+    <div class="bg-light p-5 text-center rounded border border-3 border-dark">
+      <h4 class="fw-bold fst-italic text-uppercase">¿Más números?</h4>
+      <p class="text-muted mb-4">Agrega la cantidad de números que desees.</p>
+      <form class="d-inline-flex justify-content-center align-items-center gap-3 flex-wrap">
+        <input type="number" min="1" class="form-control custom-input" placeholder="Cantidad" required>
+        <button type="submit" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</button>
+      </form>
+    </div>
+  </div>
+</div>
+</div>
+</section>
+
 {% endblock %}
 
