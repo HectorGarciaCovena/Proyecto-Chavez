@@ -1,0 +1,64 @@
+{% extends 'app_rifas/base.html' %}
+{% load form_filters %}
+
+{% block content %}
+<div class="container mt-3">
+    <h2 class="mb-4" style="text-align: center;">Formulario de Participación</h2>
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row">
+            <!-- Datos del Participante -->
+            <div class="col-md-6">
+                <fieldset class="mb-4">
+                    <legend>Datos del Participante</legend>
+                    {{ participante_form.nombre.label_tag }}
+                    {{ participante_form.nombre|add_class:"form-control" }}
+
+                    {{ participante_form.apellido.label_tag }}
+                    {{ participante_form.apellido|add_class:"form-control" }}
+
+                    {{ participante_form.email.label_tag }}
+                    {{ participante_form.email|add_class:"form-control" }}
+
+                    {{ participante_form.telefono.label_tag }}
+                    {{ participante_form.telefono|add_class:"form-control" }}
+
+                    {{ participante_form.direccion.label_tag }}
+                    {{ participante_form.direccion|add_class:"form-control" }}
+
+                    {{ participante_form.ciudad.label_tag }}
+                    {{ participante_form.ciudad|add_class:"form-control" }}
+
+                    {{ participante_form.provincia.label_tag }}
+                    {{ participante_form.provincia|add_class:"form-control" }}
+
+                    {{ participante_form.pais.label_tag }}
+                    {{ participante_form.pais|add_class:"form-control" }}
+                </fieldset>
+            </div>
+
+            <!-- NúmerosFavoritos -->
+            <div class="col-md-6">
+                <fieldset class="mb-4">
+                    <legend>Números Favoritos</legend>
+
+                    {{ orden_form.numeros_favoritos.label_tag }}
+                    {{ orden_form.numeros_favoritos|add_class:"form-control" }}
+
+                    {{ orden_form.estado.label_tag }}
+                    {{ orden_form.estado|add_class:"form-select" }}
+
+                    {{ orden_form.metodo_pago.label_tag }}
+                    {{ orden_form.metodo_pago|add_class:"form-select" }}
+                </fieldset>
+
+                <!-- Botones -->
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'home' %}" class="btn btn-secondary">Regresar al Inicio</a>
+                    <button type="submit" class="btn btn-primary">Enviar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

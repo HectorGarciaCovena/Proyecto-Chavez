@@ -16,7 +16,7 @@ SECRET_KEY = 'django-insecure-4g39hcw295c@%$h_n75%(tpgkln72b_88iy&k%(qa56r#yd85c
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['f234-27-50-12-226.ngrok-free.app', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     
     # Tu app personalizada
     'app_rifas',
