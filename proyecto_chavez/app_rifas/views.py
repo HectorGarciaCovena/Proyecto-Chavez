@@ -3,6 +3,10 @@ from django.utils import timezone
 from .forms import ParticipanteForm, OrdenForm
 from .models import Orden, MensajeSorteo
 
+def home(request):
+    mensaje = MensajeSorteo.objects.first()
+    return render(request, 'app_rifas/home.html', {'mensaje': mensaje})
+
 def crear_pedido(request):
     cantidad = int(request.GET.get('cantidad', 1))  # Valor por defecto si no viene en la URL
 

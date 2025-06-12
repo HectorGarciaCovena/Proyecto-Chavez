@@ -1,9 +1,10 @@
 {% extends 'app_rifas/base.html' %}
 {% load form_filters %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-3">
-    <h2 class="mb-4" style="text-align: center;">Formulario de Participación</h2>
+    <h2 class="mb-4 text-center">Formulario de Participación</h2>
     <form method="post" novalidate>
         {% csrf_token %}
         <div class="row">
@@ -37,13 +38,21 @@
                 </fieldset>
             </div>
 
-            <!-- NúmerosFavoritos -->
+            <!-- Números Favoritos y Pedido -->
             <div class="col-md-6">
                 <fieldset class="mb-4">
                     <legend>Números Favoritos</legend>
 
                     {{ orden_form.numeros_favoritos.label_tag }}
                     {{ orden_form.numeros_favoritos|add_class:"form-control" }}
+
+                    <small class="form-text text-muted">
+                        Ingrese {{ request.GET.cantidad }} números de 6 dígitos separados por comas. Ejemplo: 123456,654321,...
+                    </small>
+                </fieldset>
+
+                <fieldset class="mb-4">
+                    <legend>Datos del Pedido</legend>
 
                     {{ orden_form.estado.label_tag }}
                     {{ orden_form.estado|add_class:"form-select" }}
@@ -61,4 +70,8 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'app_rifas/js/validacion_numeros.js' %}"></script>
 {% endblock %}
