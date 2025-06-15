@@ -1,7 +1,23 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
-# Modelo de Participante (cliente)
+# Validador de cédula ecuatoriana
+def validar_cedula_ecuador(value):
+    if not value.isdigit() or len(value) != 10:
+        raise ValidationError("La cédula debe tener exactamente 10 dígitos.")
+
+    provincia = int(value[:2])
+    if provincia < 1 or provincia > 24:
+        raise ValidationError("La cédula ingresada no pertenece a una provincia válida.")
+
+    coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+    suma = sum((x if x < 10 else x - 9) for x in [int(a)*b for a, b in zip(value[:9], coeficientes)])
+    verificador = int(value[9])
+    if (10 - suma % 10) % 10 != verificador:
+        raise ValidationError("La cédula ingresada no es válida.")
+
 class Participante(models.Model):
+    cedula = models.CharField(max_length=10, blank=True, validators=[validar_cedula_ecuador])
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField()
@@ -14,8 +30,6 @@ class Participante(models.Model):
     def __str__(self):
         return f"{self.nombre} {self.apellido}"
 
-
-# Modelo de Orden o Compra
 class Orden(models.Model):
     participante = models.ForeignKey(Participante, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
@@ -30,12 +44,11 @@ class Orden(models.Model):
         ("pagado", "Pagado"),
         ("cancelado", "Cancelado"),
     ], default="pendiente")
+    pagado = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Orden #{self.id} - {self.participante}"
 
-
-# Modelo de Rifa (asumo que ya existe, pero incluyo aquí por claridad)
 class Rifa(models.Model):
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
@@ -45,8 +58,6 @@ class Rifa(models.Model):
     def __str__(self):
         return self.titulo
 
-
-# Modelo de Número (boleto de rifa)
 class Numero(models.Model):
     numero = models.PositiveIntegerField()
     rifa = models.ForeignKey(Rifa, on_delete=models.CASCADE, related_name='numeros')
@@ -58,21 +69,34 @@ class Numero(models.Model):
     def __str__(self):
         return f"{self.numero:05d} - {self.rifa.titulo}"
 
-# Mensaje que aparece en la pantalla principal (editable desde el admin)
-class MensajeSorteo(models.Model):
-    mensaje = models.TextField("Mensaje principal")
-    actualizado = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return "Mensaje Principal del Sorteo"
-
-    class Meta:
-        verbose_name = "Mensaje del Sorteo"
-        verbose_name_plural = "Mensaje del Sorteo"
-
 class NumeroSeleccionado(models.Model):
     orden = models.ForeignKey('Orden', on_delete=models.CASCADE, related_name='numeros')
     numero = models.CharField(max_length=6)
 
     def __str__(self):
         return self.numero
+
+class NumeroFavoritoVendido(models.Model):
+    numero = models.CharField(max_length=6, unique=True)
+
+    def __str__(self):
+        return self.numero
+
+class MensajeSorteo(models.Model):
+    mensaje = models.TextField("Mensaje principal")
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Mensaje del Sorteo"
+        verbose_name_plural = "Mensaje del Sorteo"
+
+    def __str__(self):
+        return "Mensaje Principal del Sorteo"
+
+class SliderImagen(models.Model):
+    titulo = models.CharField(max_length=100)
+    imagen = models.ImageField(upload_to='slider/')
+    activo = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.titulo

@@ -1,49 +1,29 @@
 from django import forms
 from .models import Participante, Orden
-import re
 
 class ParticipanteForm(forms.ModelForm):
     class Meta:
         model = Participante
         fields = '__all__'
 
-class OrdenForm(forms.ModelForm):
-    numeros_favoritos = forms.CharField(
-        label="Números Favoritos",
-        required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Ej: 123456,234567,345678'})
-    )
+    def clean_cedula(self):
+        cedula = self.cleaned_data.get('cedula')
+        if not cedula or not cedula.isdigit() or len(cedula) != 10:
+            raise forms.ValidationError("La cédula debe tener 10 dígitos numéricos.")
 
+        provincia = int(cedula[:2])
+        if provincia < 1 or provincia > 24:
+            raise forms.ValidationError("Código de provincia inválido.")
+
+        coef = [2, 1, 2, 1, 2, 1, 2, 1, 2]
+        suma = sum((a if a < 10 else a - 9) for a in [int(x) * y for x, y in zip(cedula[:9], coef)])
+        verificador = int(cedula[9])
+        if (10 - suma % 10) % 10 != verificador:
+            raise forms.ValidationError("La cédula no es válida.")
+
+        return cedula
+
+class OrdenForm(forms.ModelForm):
     class Meta:
         model = Orden
-        fields = ['estado', 'metodo_pago', 'numeros_favoritos']
-
-    def __init__(self, *args, **kwargs):
-        # Capturar la cantidad desde la vista
-        self.cantidad = kwargs.pop('cantidad', None)
-        super().__init__(*args, **kwargs)
-
-    def clean_numeros_favoritos(self):
-        data = self.cleaned_data['numeros_favoritos']
-        cantidad = self.cantidad
-
-        if not data:
-            raise forms.ValidationError("Debe ingresar los números favoritos separados por comas.")
-
-        numeros = [n.strip() for n in data.split(',') if n.strip()]
-        
-        # Validación: cantidad exacta
-        if cantidad and len(numeros) != cantidad:
-            raise forms.ValidationError(f"Debe ingresar exactamente {cantidad} números.")
-
-        # Validación: formato de cada número
-        for n in numeros:
-            if not re.fullmatch(r'\d{6}', n):
-                raise forms.ValidationError(f"El número '{n}' no tiene exactamente 6 dígitos.")
-
-        # Validación: que no estén repetidos
-        if len(set(numeros)) != len(numeros):
-            raise forms.ValidationError("Los números no deben repetirse.")
-
-        return data
-
+        fields = ['metodo_pago'] 

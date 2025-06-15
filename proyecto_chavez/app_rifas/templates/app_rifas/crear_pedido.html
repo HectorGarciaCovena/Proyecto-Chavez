@@ -1,17 +1,45 @@
 {% extends 'app_rifas/base.html' %}
 {% load form_filters %}
-{% load static %}
 
 {% block content %}
 <div class="container mt-3">
     <h2 class="mb-4 text-center">Formulario de Participación</h2>
-    <form method="post" novalidate>
+
+    <!-- Mostrar errores si los hay -->
+    {% if participante_form.errors %}
+    <div class="alert alert-danger">
+        <strong>Errores en los datos del participante:</strong>
+        <ul>
+            {% for field, errors in participante_form.errors.items %}
+                <li>{{ field }}: {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if orden_form.errors %}
+    <div class="alert alert-danger">
+        <strong>Errores en el pedido:</strong>
+        <ul>
+            {% for field, errors in orden_form.errors.items %}
+                <li>{{ field }}: {{ errors|join:", " }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'crear_pedido' %}" novalidate>
         {% csrf_token %}
+        <input type="hidden" name="cantidad" value="{{ cantidad_maxima }}">
         <div class="row">
             <!-- Datos del Participante -->
             <div class="col-md-6">
                 <fieldset class="mb-4">
                     <legend>Datos del Participante</legend>
+
+                    {{ participante_form.cedula.label_tag }}
+                    {{ participante_form.cedula|add_class:"form-control" }}
+
                     {{ participante_form.nombre.label_tag }}
                     {{ participante_form.nombre|add_class:"form-control" }}
 
@@ -43,35 +71,27 @@
                 <fieldset class="mb-4">
                     <legend>Números Favoritos</legend>
 
-                    {{ orden_form.numeros_favoritos.label_tag }}
-                    {{ orden_form.numeros_favoritos|add_class:"form-control" }}
+                    <label for="numeroInput" class="form-label">Número (6 dígitos):</label>
+                    <div class="input-group mb-2">
+                        <input type="text" id="numeroInput" class="form-control" placeholder="Ej: 123456">
+                        <button type="button" class="btn btn-success" id="agregarNumeroBtn" data-max="{{ cantidad_maxima }}">Agregar</button>
+                    </div>
+                    <div id="errorNumeros" class="text-danger mb-2"></div>
 
-                    <small class="form-text text-muted">
-                        Ingrese {{ request.GET.cantidad }} números de 6 dígitos separados por comas. Ejemplo: 123456,654321,...
-                    </small>
-                </fieldset>
+                    <ul id="listaNumeros" class="list-group mb-3"></ul>
 
-                <fieldset class="mb-4">
-                    <legend>Datos del Pedido</legend>
-
-                    {{ orden_form.estado.label_tag }}
-                    {{ orden_form.estado|add_class:"form-select" }}
+                    <input type="hidden" name="numeros_favoritos" id="numerosFavoritosInput">
 
                     {{ orden_form.metodo_pago.label_tag }}
                     {{ orden_form.metodo_pago|add_class:"form-select" }}
                 </fieldset>
 
-                <!-- Botones -->
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'home' %}" class="btn btn-secondary">Regresar al Inicio</a>
-                    <button type="submit" class="btn btn-primary">Enviar Pedido</button>
+                    <button type="submit" class="btn btn-primary" id="enviarPedidoBtn" disabled>Enviar Pedido</button>
                 </div>
             </div>
         </div>
     </form>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'app_rifas/js/validacion_numeros.js' %}"></script>
 {% endblock %}
