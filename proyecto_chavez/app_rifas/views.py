@@ -3,23 +3,51 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib import messages
 from .forms import ParticipanteForm, OrdenForm
-from .models import Orden, MensajeSorteo, NumeroSeleccionado, Numero, SliderImagen, Rifa, Participante
-from django.http import JsonResponse
-import io
+from .models import Orden, MensajeSorteo, NumeroSeleccionado, Numero, SliderImagen, Rifa, NumeroBendecido, Participante
+from django.http import JsonResponse, HttpResponse
+import io, base64
 import qrcode
-from django.http import FileResponse, HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
+from django.conf import settings
+from django.templatetags.static import static
 
 def home(request):
+    rifa = Rifa.objects.first()
+
+    if not rifa:
+        return render(request, 'app_rifas/home.html', {
+            'numeros_vendidos': 0,
+            'total_numeros': 0,
+            'porcentaje_vendidos': 0,
+            'slider_imagenes': [],
+            'mensaje': None,
+            'numeros_bendecidos': [],
+            'paquetes': [10, 15, 20, 30, 50, 100],  # se pasa lista directamente
+        })
+
+    total_numeros = rifa.numero_final - rifa.numero_inicial + 1
+    numeros_vendidos = Numero.objects.filter(rifa=rifa, comprado=True).count()
+
+    porcentaje_vendidos = int((numeros_vendidos / total_numeros) * 100) if total_numeros > 0 else 0
+    slider_imagenes = SliderImagen.objects.all()
     mensaje = MensajeSorteo.objects.first()
-    slider_imagenes = SliderImagen.objects.filter(activo=True)
+    numeros_bendecidos = NumeroBendecido.objects.all()
+
+    paquetes = [10, 15, 20, 30, 50, 100]  # ✅ Lista en la vista
+
     return render(request, 'app_rifas/home.html', {
+        'numeros_vendidos': numeros_vendidos,
+        'total_numeros': total_numeros,
+        'porcentaje_vendidos': porcentaje_vendidos,
+        'slider_imagenes': slider_imagenes,
         'mensaje': mensaje,
-        'slider_imagenes': slider_imagenes
+        'numeros_bendecidos': numeros_bendecidos,
+        'paquetes': paquetes,  # ✅ Se envía al contexto
     })
 
 def crear_pedido(request):
+    rifa = Rifa.objects.first()
     cantidad = int(request.GET.get("cantidad") or request.POST.get("cantidad") or 1)
 
     if request.method == 'POST':
@@ -30,28 +58,32 @@ def crear_pedido(request):
         numeros = [n.strip() for n in numeros_str.split(',') if n.strip()]
 
         if participante_form.is_valid() and orden_form.is_valid():
-            vendidos = Numero.objects.filter(numero__in=numeros, comprado=True).values_list('numero', flat=True)
-            duplicados = set(numeros) & set(str(n) for n in vendidos)
-            if duplicados:
-                orden_form.add_error(None, f"Los siguientes números ya están vendidos: {', '.join(duplicados)}")
-            elif len(numeros) != cantidad:
+            if len(numeros) != cantidad:
                 orden_form.add_error(None, f"Debe ingresar exactamente {cantidad} números.")
-            elif any(len(n) != 6 or not n.isdigit() for n in numeros):
-                orden_form.add_error(None, "Todos los números deben tener exactamente 6 dígitos.")
+            elif any(len(n) != 5 or not n.isdigit() for n in numeros):
+                orden_form.add_error(None, "Todos los números deben tener exactamente 5 dígitos.")
             elif len(set(numeros)) != len(numeros):
                 orden_form.add_error(None, "Los números no deben repetirse.")
             else:
                 cedula = participante_form.cleaned_data['cedula']
                 participante, creado = Participante.objects.get_or_create(
                     cedula=cedula,
-                    defaults=participante_form.cleaned_data
+                    defaults={
+                        'nombre': participante_form.cleaned_data['nombre'],
+                        'apellido': participante_form.cleaned_data['apellido'],
+                        'email': participante_form.cleaned_data['email'],
+                        'telefono': participante_form.cleaned_data['telefono'],
+                        'pais': participante_form.cleaned_data['pais'],
+                        'provincia': participante_form.cleaned_data['provincia'],
+                        'ciudad': participante_form.cleaned_data['ciudad'],
+                        'direccion': participante_form.cleaned_data['direccion'],
+                    }
                 )
+
                 orden = orden_form.save(commit=False)
                 orden.participante = participante
                 orden.fecha = timezone.now()
-                orden.estado = 'pendiente'
-                orden.pagado = False
-                orden.total = 0
+                orden.total = rifa.precio_numero * cantidad
                 orden.save()
 
                 for numero in numeros:
@@ -62,10 +94,18 @@ def crear_pedido(request):
         participante_form = ParticipanteForm()
         orden_form = OrdenForm()
 
+    total_numeros = rifa.total_numeros()
+    numeros_vendidos = Numero.objects.filter(rifa=rifa, comprado=True).count()
+    porcentaje = int((numeros_vendidos / total_numeros) * 100) if total_numeros else 0
+
     return render(request, 'app_rifas/crear_pedido.html', {
         'participante_form': participante_form,
         'orden_form': orden_form,
-        'cantidad_maxima': cantidad
+        'cantidad_maxima': cantidad,
+        'rifa': rifa,
+        'numeros_vendidos': numeros_vendidos,
+        'total_numeros': total_numeros,
+        'porcentaje': porcentaje,
     })
 
 def detalle_pedido(request, pedido_id):
@@ -123,36 +163,55 @@ def verificar_numero(request, numero):
     return JsonResponse({'vendido': vendido})
 
 def generar_boleta(request, orden_id):
-    orden = Orden.objects.get(pk=orden_id)
+    orden = get_object_or_404(Orden, pk=orden_id)
 
     if orden.estado != "pagado":
         return redirect("detalle_pedido", pedido_id=orden_id)
 
-    numeros = NumeroSeleccionado.objects.filter(orden=orden)
-    rifa = Rifa.objects.first()  # Ajusta si manejas varias rifas
+    numeros = Numero.objects.filter(orden=orden)
+    rifa = Rifa.objects.first()
 
-    # Generar QR
-    qr_url = f"http://tusitio.com/verificar-boleta/{orden.id}"
+    # QR
+    qr_url = f"{settings.SITE_URL}/verificar-boleta/{orden.id}"
     qr_img = qrcode.make(qr_url)
     qr_buffer = io.BytesIO()
     qr_img.save(qr_buffer, format="PNG")
-    qr_base64 = qr_buffer.getvalue().hex()
+    qr_base64 = base64.b64encode(qr_buffer.getvalue()).decode('utf-8')
 
-    # Preparar contexto
     context = {
         "orden": orden,
         "participante": orden.participante,
         "numeros": numeros,
         "rifa": rifa,
         "qr_base64": qr_base64,
+        "logo_url": request.build_absolute_uri(static('app_rifas/img/logo.png')),
     }
 
-    # Generar PDF desde HTML
     template = get_template("app_rifas/boleto.html")
     html = template.render(context)
     result = io.BytesIO()
-    pdf = pisa.pisaDocument(io.BytesIO(html.encode("utf-8")), result)
+    pdf = pisa.pisaDocument(io.BytesIO(html.encode("utf-8")), dest=result)
 
     if not pdf.err:
-        return FileResponse(result, as_attachment=True, filename=f"boleto_orden_{orden.id}.pdf")
+        response = HttpResponse(result.getvalue(), content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="boleto_orden_{orden.id}.pdf"'
+        return response
+
     return HttpResponse("Error al generar PDF", status=500)
+
+def verificar_participante(request, cedula):
+    try:
+        participante = Participante.objects.get(cedula=cedula)
+        return JsonResponse({
+            "existe": True,
+            "nombre": participante.nombre,
+            "apellido": participante.apellido,
+            "email": participante.email,
+            "telefono": participante.telefono,
+            "direccion": participante.direccion,
+            "ciudad": participante.ciudad,
+            "provincia": participante.provincia,
+            "pais": participante.pais,
+        })
+    except Participante.DoesNotExist:
+        return JsonResponse({"existe": False})

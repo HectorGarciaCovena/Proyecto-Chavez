@@ -54,6 +54,11 @@ class Rifa(models.Model):
     descripcion = models.TextField()
     fecha_sorteo = models.DateField()
     precio_numero = models.DecimalField(max_digits=6, decimal_places=2)
+    numero_inicial = models.PositiveIntegerField(default=10000)
+    numero_final = models.PositiveIntegerField(default=19999)
+
+    def total_numeros(self):
+        return self.numero_final - self.numero_inicial + 1
 
     def __str__(self):
         return self.titulo
@@ -71,13 +76,7 @@ class Numero(models.Model):
 
 class NumeroSeleccionado(models.Model):
     orden = models.ForeignKey('Orden', on_delete=models.CASCADE, related_name='numeros')
-    numero = models.CharField(max_length=6)
-
-    def __str__(self):
-        return self.numero
-
-class NumeroFavoritoVendido(models.Model):
-    numero = models.CharField(max_length=6, unique=True)
+    numero = models.CharField(max_length=5)
 
     def __str__(self):
         return self.numero
@@ -100,3 +99,20 @@ class SliderImagen(models.Model):
 
     def __str__(self):
         return self.titulo
+
+class NumeroBendecido(models.Model):
+    numero = models.CharField(max_length=5, unique=True)
+    rifa = models.ForeignKey(Rifa, on_delete=models.CASCADE, related_name='bendecidos')
+
+    def clean(self):
+        if not self.numero.isdigit():
+            raise ValidationError("El número debe contener solo dígitos.")
+        if len(self.numero) != 5:
+            raise ValidationError("El número debe tener exactamente 5 dígitos.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Llama a clean() antes de guardar
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.numero} (Rifa: {self.rifa.titulo})"

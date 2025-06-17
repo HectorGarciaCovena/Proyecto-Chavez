@@ -5,7 +5,7 @@
 <div class="container mt-3">
     <h2 class="mb-4 text-center">Formulario de Participación</h2>
 
-    <!-- Mostrar errores si los hay -->
+    <!-- Errores del formulario -->
     {% if participante_form.errors %}
     <div class="alert alert-danger">
         <strong>Errores en los datos del participante:</strong>
@@ -32,13 +32,23 @@
         {% csrf_token %}
         <input type="hidden" name="cantidad" value="{{ cantidad_maxima }}">
         <div class="row">
-            <!-- Datos del Participante -->
+            <!-- Participante -->
             <div class="col-md-6">
                 <fieldset class="mb-4">
                     <legend>Datos del Participante</legend>
 
-                    {{ participante_form.cedula.label_tag }}
-                    {{ participante_form.cedula|add_class:"form-control" }}
+                    <div class="mb-3">
+                        <label for="id_cedula" class="form-label">Cédula:</label>
+                        <div class="input-group">
+                            {{ participante_form.cedula|add_class:"form-control" }}
+                            <button type="button" id="buscarCedulaBtn" class="btn btn-outline-secondary" title="Buscar cliente">
+                            🔍
+                            </button>
+                        </div>
+                    </div>
+                    <div id="alertaCedula" class="alert alert-warning d-none mt-2 py-2 px-3" role="alert">
+                        ⚠️ No se encontraron datos para esta cédula. Por favor complete el formulario.
+                    </div>
 
                     {{ participante_form.nombre.label_tag }}
                     {{ participante_form.nombre|add_class:"form-control" }}
@@ -66,31 +76,46 @@
                 </fieldset>
             </div>
 
-            <!-- Números Favoritos y Pedido -->
+            <!-- Pedido -->
             <div class="col-md-6">
                 <fieldset class="mb-4">
                     <legend>Números Favoritos</legend>
 
-                    <label for="numeroInput" class="form-label">Número (6 dígitos):</label>
+                    <label for="numeroInput" class="form-label">Número (5 dígitos):</label>
                     <div class="input-group mb-2">
-                        <input type="text" id="numeroInput" class="form-control" placeholder="Ej: 123456">
+                        <input type="text" id="numeroInput" class="form-control" placeholder="Ej: 12345">
                         <button type="button" class="btn btn-success" id="agregarNumeroBtn" data-max="{{ cantidad_maxima }}">Agregar</button>
                     </div>
+
                     <div id="errorNumeros" class="text-danger mb-2"></div>
 
-                    <ul id="listaNumeros" class="list-group mb-3"></ul>
+                    <!-- Lista y contador -->
+                    <ul id="listaNumeros" class="list-group mb-2"></ul>
+                    <div id="contadorNumeros" class="text-muted mb-3">0/{{ cantidad_maxima }} números agregados</div>
 
+                    <!-- Hidden input para backend -->
                     <input type="hidden" name="numeros_favoritos" id="numerosFavoritosInput">
 
+                    <!-- Método de pago -->
                     {{ orden_form.metodo_pago.label_tag }}
                     {{ orden_form.metodo_pago|add_class:"form-select" }}
                 </fieldset>
 
+                <!-- Botones -->
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'home' %}" class="btn btn-secondary">Regresar al Inicio</a>
-                    <button type="submit" class="btn btn-primary" id="enviarPedidoBtn" disabled>Enviar Pedido</button>
+
+                    <!-- Tooltip funcional envolviendo el botón deshabilitado -->
+                    <span title="Debe completar todos los campos obligatorios y seleccionar {{ cantidad_maxima }} números">
+                        <button type="submit"
+                                class="btn btn-primary"
+                                id="enviarPedidoBtn"
+                                disabled>
+                            Enviar Pedido
+                        </button>
+                    </span>
                 </div>
-            </div>
+            </div>  
         </div>
     </form>
 </div>
