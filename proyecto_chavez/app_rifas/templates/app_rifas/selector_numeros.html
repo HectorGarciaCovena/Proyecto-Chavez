@@ -1,0 +1,74 @@
+{% extends 'app_rifas/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="text-center mb-4">Selecciona {{ cantidad }} número{{ cantidad|pluralize }} disponibles</h3>
+
+    <div class="text-center mb-3">
+        <button id="confirmarSeleccion" class="btn btn-primary" disabled>Confirmar Selección</button>
+        <p class="mt-2 text-muted" id="contador">0/{{ cantidad }} seleccionados</p>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="d-flex flex-wrap justify-content-center" id="gridNumeros">
+                {% for i in rango_numeros %}
+                    {% if i in vendidos %}
+                        <div class="numero-box vendido">{{ i|stringformat:"05d" }}</div>
+                    {% else %}
+                        <div class="numero-box disponible" data-numero="{{ i|stringformat:"05d" }}">{{ i|stringformat:"05d" }}</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.numero-box {
+    width: 80px;
+    height: 50px;
+    margin: 5px;
+    line-height: 50px;
+    text-align: center;
+    border-radius: 8px;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.numero-box:hover {
+    transform: scale(1.05);
+}
+
+.disponible {
+    background-color: #e0f7fa;
+    border: 2px solid #00acc1;
+    color: #006064;
+}
+
+.vendido {
+    background-color: #ffebee;
+    border: 2px solid #e53935;
+    color: #b71c1c;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.seleccionado {
+    background-color: #c8e6c9 !important;
+    border-color: #43a047 !important;
+    color: #1b5e20 !important;
+}
+</style>
+
+<script src="{% static 'app_rifas/js/selector.js' %}"></script>
+<script>
+    const CANTIDAD_OBJETIVO = {{ cantidad }};
+</script>
+{% endblock %}
+
+

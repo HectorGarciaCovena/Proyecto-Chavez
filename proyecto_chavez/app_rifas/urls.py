@@ -11,6 +11,7 @@ urlpatterns = [
     path('verificar-numero/<str:numero>/', views.verificar_numero, name='verificar_numero'),
     path('generar-boleta/<int:orden_id>/', views.generar_boleta, name='generar_boleta'),
     path('verificar-participante/<str:cedula>/', views.verificar_participante, name='verificar_participante'),
+    path('selector-numeros/<int:cantidad>/', views.selector_numeros, name='selector_numeros'),
 ]
 
 

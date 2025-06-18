@@ -1,11 +1,11 @@
 {% extends 'app_rifas/base.html' %}
 {% load form_filters %}
+{% load static %}
 
 {% block content %}
 <div class="container mt-3">
     <h2 class="mb-4 text-center">Formulario de Participación</h2>
 
-    <!-- Errores del formulario -->
     {% if participante_form.errors %}
     <div class="alert alert-danger">
         <strong>Errores en los datos del participante:</strong>
@@ -42,10 +42,11 @@
                         <div class="input-group">
                             {{ participante_form.cedula|add_class:"form-control" }}
                             <button type="button" id="buscarCedulaBtn" class="btn btn-outline-secondary" title="Buscar cliente">
-                            🔍
+                                🔍
                             </button>
                         </div>
                     </div>
+
                     <div id="alertaCedula" class="alert alert-warning d-none mt-2 py-2 px-3" role="alert">
                         ⚠️ No se encontraron datos para esta cédula. Por favor complete el formulario.
                     </div>
@@ -81,42 +82,39 @@
                 <fieldset class="mb-4">
                     <legend>Números Favoritos</legend>
 
-                    <label for="numeroInput" class="form-label">Número (5 dígitos):</label>
-                    <div class="input-group mb-2">
-                        <input type="text" id="numeroInput" class="form-control" placeholder="Ej: 12345">
-                        <button type="button" class="btn btn-success" id="agregarNumeroBtn" data-max="{{ cantidad_maxima }}">Agregar</button>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-success"
+                                onclick="window.open('{% url 'selector_numeros' cantidad_maxima %}', '_blank');">
+                            Seleccionar Números
+                        </button>
                     </div>
 
-                    <div id="errorNumeros" class="text-danger mb-2"></div>
+                    <div id="listaNumeros" class="mb-2">
+                        <!-- Aquí se mostrarán los números seleccionados -->
+                    </div>
 
-                    <!-- Lista y contador -->
-                    <ul id="listaNumeros" class="list-group mb-2"></ul>
                     <div id="contadorNumeros" class="text-muted mb-3">0/{{ cantidad_maxima }} números agregados</div>
 
-                    <!-- Hidden input para backend -->
                     <input type="hidden" name="numeros_favoritos" id="numerosFavoritosInput">
 
-                    <!-- Método de pago -->
                     {{ orden_form.metodo_pago.label_tag }}
                     {{ orden_form.metodo_pago|add_class:"form-select" }}
                 </fieldset>
 
-                <!-- Botones -->
                 <div class="d-flex justify-content-between">
                     <a href="{% url 'home' %}" class="btn btn-secondary">Regresar al Inicio</a>
-
-                    <!-- Tooltip funcional envolviendo el botón deshabilitado -->
                     <span title="Debe completar todos los campos obligatorios y seleccionar {{ cantidad_maxima }} números">
-                        <button type="submit"
-                                class="btn btn-primary"
-                                id="enviarPedidoBtn"
-                                disabled>
-                            Enviar Pedido
-                        </button>
+                        <button type="submit" class="btn btn-primary" id="enviarPedidoBtn" disabled>Enviar Pedido</button>
                     </span>
                 </div>
-            </div>  
+            </div>
         </div>
     </form>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'app_rifas/js/validaciones.js' %}"></script>
+{% endblock %}
+
+

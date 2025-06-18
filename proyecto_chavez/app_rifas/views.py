@@ -11,44 +11,38 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.conf import settings
 from django.templatetags.static import static
+from django.views.decorators.cache import never_cache
+
+from .models import Rifa, Numero
 
 def home(request):
-    rifa = Rifa.objects.first()
-
-    if not rifa:
-        return render(request, 'app_rifas/home.html', {
-            'numeros_vendidos': 0,
-            'total_numeros': 0,
-            'porcentaje_vendidos': 0,
-            'slider_imagenes': [],
-            'mensaje': None,
-            'numeros_bendecidos': [],
-            'paquetes': [10, 15, 20, 30, 50, 100],  # se pasa lista directamente
-        })
-
-    total_numeros = rifa.numero_final - rifa.numero_inicial + 1
-    numeros_vendidos = Numero.objects.filter(rifa=rifa, comprado=True).count()
-
-    porcentaje_vendidos = int((numeros_vendidos / total_numeros) * 100) if total_numeros > 0 else 0
-    slider_imagenes = SliderImagen.objects.all()
     mensaje = MensajeSorteo.objects.first()
-    numeros_bendecidos = NumeroBendecido.objects.all()
-
-    paquetes = [10, 15, 20, 30, 50, 100]  # ✅ Lista en la vista
+    slider_imagenes = SliderImagen.objects.filter(activo=True)
+    
+    rifa = Rifa.objects.first()
+    total_numeros = rifa.total_numeros() if rifa else 1
+    numeros_vendidos = Numero.objects.filter(comprado=True).count()
+    porcentaje_vendidos = round((numeros_vendidos / total_numeros) * 100) if total_numeros else 0
 
     return render(request, 'app_rifas/home.html', {
-        'numeros_vendidos': numeros_vendidos,
-        'total_numeros': total_numeros,
-        'porcentaje_vendidos': porcentaje_vendidos,
-        'slider_imagenes': slider_imagenes,
         'mensaje': mensaje,
-        'numeros_bendecidos': numeros_bendecidos,
-        'paquetes': paquetes,  # ✅ Se envía al contexto
+        'slider_imagenes': slider_imagenes,
+        'rifa': rifa,
+        'total_numeros': total_numeros,
+        'numeros_vendidos': numeros_vendidos,
+        'porcentaje_vendidos': porcentaje_vendidos,
     })
 
 def crear_pedido(request):
     rifa = Rifa.objects.first()
     cantidad = int(request.GET.get("cantidad") or request.POST.get("cantidad") or 1)
+
+    if not rifa:
+        messages.error(request, "No hay una rifa activa.")
+        return redirect("home")
+
+    numero_min = rifa.numero_inicial
+    numero_max = rifa.numero_final
 
     if request.method == 'POST':
         participante_form = ParticipanteForm(request.POST)
@@ -60,8 +54,8 @@ def crear_pedido(request):
         if participante_form.is_valid() and orden_form.is_valid():
             if len(numeros) != cantidad:
                 orden_form.add_error(None, f"Debe ingresar exactamente {cantidad} números.")
-            elif any(len(n) != 5 or not n.isdigit() for n in numeros):
-                orden_form.add_error(None, "Todos los números deben tener exactamente 5 dígitos.")
+            elif any(not n.isdigit() or not (numero_min <= int(n) <= numero_max) for n in numeros):
+                orden_form.add_error(None, f"Todos los números deben tener entre {numero_min} y {numero_max}.")
             elif len(set(numeros)) != len(numeros):
                 orden_form.add_error(None, "Los números no deben repetirse.")
             else:
@@ -215,3 +209,22 @@ def verificar_participante(request, cedula):
         })
     except Participante.DoesNotExist:
         return JsonResponse({"existe": False})
+
+@never_cache
+def selector_numeros(request, cantidad):
+    rifa = Rifa.objects.first()
+    if not rifa:
+        return HttpResponse("No hay rifa activa.", status=404)
+
+    vendidos = Numero.objects.filter(rifa=rifa, comprado=True).values_list('numero', flat=True)
+
+    # ✅ Generar el rango en Python
+    rango_numeros = range(rifa.numero_inicial, rifa.numero_final + 1)
+
+    return render(request, 'app_rifas/selector_numeros.html', {
+        'cantidad': int(cantidad),
+        'numero_min': rifa.numero_inicial,
+        'numero_max': rifa.numero_final,
+        'vendidos': list(vendidos),
+        'rango_numeros': rango_numeros,  # ← esto es clave
+    })
