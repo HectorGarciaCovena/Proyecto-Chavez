@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-        
+
     # Tu app personalizada
     'app_rifas',
 ]
@@ -40,14 +40,17 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    ]
+]
 
 ROOT_URLCONF = 'proyecto_chavez.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'app_rifas/templates')],  # ✅ AQUI dentro del bloque
+        'DIRS': [
+            os.path.join(BASE_DIR, 'app_rifas/templates'),  # vistas personalizadas de tu app
+            os.path.join(BASE_DIR, 'templates'),            # templates globales como admin/recaudacion_total.html
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -61,7 +64,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'proyecto_chavez.wsgi.application'
 
-# Database
+# Base de datos
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -69,7 +72,7 @@ DATABASES = {
     }
 }
 
-# Password validation
+# Validación de contraseñas
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -77,25 +80,23 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# Internacionalización
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# PayPal Sandbox Credentials
+PAYPAL_CLIENT_ID = 'AS09xmbV5tXfYZCD60ZKWVTwSAXOtAiaiv5Oz1qgeiV9qIdLkvUov-9iC3nvdwIk3L3mC18ShVuUuqzy'
+PAYPAL_CLIENT_SECRET = 'EJUqdRWgwSGx1qD7hvyA2cSsQdvglCK7ARdbU8hnIbMfTRZqwk9-aq1yjolH_TI7wcd0ld4g3A4TT9A0'
+
+# Archivos estáticos
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-#STATICFILES_DIRS = [os.path.join(BASE_DIR, 'app_rifas/static')]
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Media files (para imágenes subidas desde el admin)
+# Archivos multimedia (para imágenes y subidas)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-SITE_URL = "http://127.0.0.1:8000"  # o usa tu dominio en producción
-
-
-
+# URL base del sitio (para generación de enlaces absolutos o QR)
+SITE_URL = "http://127.0.0.1:8000"

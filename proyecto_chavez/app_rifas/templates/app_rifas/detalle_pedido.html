@@ -4,10 +4,19 @@
 <div class="container mt-4">
     <h2 class="text-center mb-4">Detalle del Pedido #{{ pedido.id }}</h2>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            Información del Participante
+    {% if pedido.estado == "pagado" %}
+        <div class="alert alert-success text-center">
+            ✅ Esta orden ha sido <strong>PAGADA</strong>. Tu boleto ya está disponible.
         </div>
+    {% else %}
+        <div class="alert alert-warning text-center">
+            ⚠️ Esta orden aún está <strong>PENDIENTE DE PAGO</strong>.
+            <br>Por favor completa el pago para asegurar tus números.
+        </div>
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-header">Información del Participante</div>
         <div class="card-body">
             <p><strong>Nombre:</strong> {{ pedido.participante.nombre }} {{ pedido.participante.apellido }}</p>
             <p><strong>Email:</strong> {{ pedido.participante.email }}</p>
@@ -17,9 +26,7 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-header">
-            Detalles del Pedido
-        </div>
+        <div class="card-header">Detalles del Pedido</div>
         <div class="card-body">
             <p><strong>Método de Pago:</strong> {{ pedido.metodo_pago }}</p>
             <p><strong>Estado:</strong> 
@@ -34,9 +41,7 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-header">
-            Números Seleccionados
-        </div>
+        <div class="card-header">Números Seleccionados</div>
         <div class="card-body">
             {% if numeros %}
                 <ul class="list-group">
@@ -51,27 +56,30 @@
     </div>
 
     {% if pedido.estado == 'pendiente' %}
-    <form method="post" action="{% url 'simular_pago' pedido.id %}">
-        {% csrf_token %}
-        <div class="text-end">
-            <button type="submit" class="btn btn-success">Simular Pago</button>
+        <div class="d-flex justify-content-between mt-3">
+            <!-- Botón para continuar con el pago vía PayPal -->
+            <form method="get" action="{% url 'paypal_create' pedido.id %}">
+                <button type="submit" class="btn btn-success">Continuar con el Pago</button>
+            </form>
+
+
+            <form method="post" action="{% url 'cancelar_pedido' pedido.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Cancelar Pedido</button>
+            </form>
         </div>
-    </form>
-{% else %}
-    <div class="alert alert-success text-center mb-3">
-        ✅ Este pedido ya ha sido pagado.
-    </div>
-    <div class="text-end">
-        <a href="{% url 'generar_boleta' pedido.id %}" target="_blank" class="btn btn-outline-primary">
-            🖨️ Descargar Boleto
-        </a>        
-    </div>
-    
-{% endif %}
-
-
-    <div class="text-center mt-4">
-        <a href="{% url 'home' %}" class="btn btn-primary">Volver al Inicio</a>
-    </div>
+    {% else %}
+        <div class="alert alert-success text-center mb-3">
+            ✅ Este pedido ya ha sido pagado.
+        </div>
+        <div class="text-end mb-3">
+            <a href="{% url 'generar_boleta' pedido.id %}" target="_blank" class="btn btn-outline-primary">
+                🖨️ Descargar Boleto
+            </a>
+        </div>
+        <div class="text-center">
+            <a href="{% url 'home' %}" class="btn btn-primary">Volver al Inicio</a>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

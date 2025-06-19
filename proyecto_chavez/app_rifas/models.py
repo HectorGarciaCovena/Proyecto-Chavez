@@ -34,10 +34,9 @@ class Orden(models.Model):
     participante = models.ForeignKey(Participante, on_delete=models.CASCADE)
     fecha = models.DateTimeField(auto_now_add=True)
     metodo_pago = models.CharField(max_length=50, choices=[
-        ("transferencia", "Transferencia bancaria"),
-        ("tarjeta", "Tarjeta de crédito/débito"),
-        ("paypal", "PayPal"),
-    ])
+    ("tarjeta", "Tarjeta de crédito/débito"),
+    ("paypal", "PayPal"),
+])
     total = models.DecimalField(max_digits=8, decimal_places=2)
     estado = models.CharField(max_length=20, choices=[
         ("pendiente", "Pendiente"),

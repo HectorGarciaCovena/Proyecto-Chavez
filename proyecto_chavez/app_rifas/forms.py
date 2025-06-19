@@ -24,6 +24,9 @@ class ParticipanteForm(forms.ModelForm):
         return cedula
 
 class OrdenForm(forms.ModelForm):
+    metodo_pago = forms.CharField(widget=forms.HiddenInput(), required=True)
+
     class Meta:
         model = Orden
-        fields = ['metodo_pago'] 
+        fields = ['metodo_pago']
+ 

@@ -12,6 +12,10 @@ urlpatterns = [
     path('generar-boleta/<int:orden_id>/', views.generar_boleta, name='generar_boleta'),
     path('verificar-participante/<str:cedula>/', views.verificar_participante, name='verificar_participante'),
     path('selector-numeros/<int:cantidad>/', views.selector_numeros, name='selector_numeros'),
+    path('paypal/create/<int:orden_id>/', views.paypal_create_order, name='paypal_create'),
+    path('paypal/success/', views.paypal_success_view, name='paypal_success'),
+    path('pedido/cancelar/<int:pedido_id>/', views.cancelar_pedido, name='cancelar_pedido'),
+    path('paypal/cancel/', views.paypal_cancel_view, name='paypal_cancel'),
 ]
 
 

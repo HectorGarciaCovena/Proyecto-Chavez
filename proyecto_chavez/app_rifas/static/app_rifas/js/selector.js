@@ -1,50 +1,74 @@
 document.addEventListener('DOMContentLoaded', function () {
-    const botones = document.querySelectorAll('.numero-box.disponible');
-    const confirmarBtn = document.getElementById('confirmarSeleccion');
-    const contador = document.getElementById('contador');
+    const gridNumeros = document.getElementById('gridNumeros');
+    const confirmarBtn = document.getElementById('confirmarSeleccionBtn');
+    const contador = document.getElementById('contadorSeleccion');
+
+    const numeroMin = parseInt(gridNumeros.dataset.min);
+    const numeroMax = parseInt(gridNumeros.dataset.max);
+    const cantidadMaxima = parseInt(gridNumeros.dataset.cantidad);
+    const vendidos = JSON.parse(gridNumeros.dataset.vendidos.replace(/'/g, '"'));
+
+    // 🧹 1. Limpiar localStorage si venimos desde el home
+    if (document.referrer.includes('/home') || document.referrer === window.location.origin + '/') {
+        localStorage.removeItem('numeros_seleccionados');
+    }
 
     let seleccionados = [];
 
-    function actualizarUI() {
-        botones.forEach(btn => {
-            const numero = btn.dataset.numero;
-            if (seleccionados.includes(numero)) {
-                btn.classList.add('seleccionado');
-            } else {
-                btn.classList.remove('seleccionado');
-            }
-        });
-
-        contador.textContent = `${seleccionados.length}/${CANTIDAD_OBJETIVO} seleccionados`;
-        confirmarBtn.disabled = seleccionados.length !== CANTIDAD_OBJETIVO;
+    // 🔄 2. Cargar selección previa (si existe)
+    const seleccionPrevia = localStorage.getItem('numeros_seleccionados');
+    if (seleccionPrevia) {
+        seleccionados = seleccionPrevia.split(',').map(n => n.trim()).filter(Boolean);
     }
 
-    botones.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const numero = btn.dataset.numero;
+    // 🧩 3. Renderizar el grid de números
+    for (let i = numeroMin; i <= numeroMax; i++) {
+        const numero = i.toString().padStart(5, '0');
+        const btn = document.createElement('button');
+        btn.className = 'numero-btn';
+        btn.textContent = numero;
+        btn.dataset.numero = numero;
 
-            if (seleccionados.includes(numero)) {
-                seleccionados = seleccionados.filter(n => n !== numero);
+        if (vendidos.includes(i)) {
+            btn.classList.add('vendido');
+            btn.disabled = true;
+        } else if (seleccionados.includes(numero)) {
+            btn.classList.add('seleccionado');
+        }
+
+        btn.addEventListener('click', () => {
+            const index = seleccionados.indexOf(numero);
+
+            if (index > -1) {
+                seleccionados.splice(index, 1);
+                btn.classList.remove('seleccionado');
             } else {
-                if (seleccionados.length < CANTIDAD_OBJETIVO) {
+                if (seleccionados.length < cantidadMaxima) {
                     seleccionados.push(numero);
+                    btn.classList.add('seleccionado');
                 }
             }
 
-            actualizarUI();
+            actualizarContadorYBoton();
         });
-    });
 
+        gridNumeros.appendChild(btn);
+    }
+
+    function actualizarContadorYBoton() {
+        contador.textContent = `${seleccionados.length}/${cantidadMaxima} seleccionados`;
+        confirmarBtn.disabled = seleccionados.length !== cantidadMaxima;
+    }
+
+    // 4. Confirmar selección y guardar en localStorage
     confirmarBtn.addEventListener('click', () => {
-        if (seleccionados.length === CANTIDAD_OBJETIVO) {
-            localStorage.setItem('numeros_seleccionados', seleccionados.join(','));
-            window.close(); // Cierra la ventana/pestaña del selector
-        } else {
-            alert(`Debes seleccionar exactamente ${CANTIDAD_OBJETIVO} número(s).`);
-        }
+        localStorage.setItem('numeros_seleccionados', seleccionados.join(','));
+        window.close();  // Cierra esta pestaña
     });
 
     // Inicial
-    actualizarUI();
+    actualizarContadorYBoton();
 });
+
+
 

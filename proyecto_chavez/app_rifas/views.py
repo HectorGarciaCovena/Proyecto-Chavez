@@ -5,32 +5,42 @@ from django.contrib import messages
 from .forms import ParticipanteForm, OrdenForm
 from .models import Orden, MensajeSorteo, NumeroSeleccionado, Numero, SliderImagen, Rifa, NumeroBendecido, Participante
 from django.http import JsonResponse, HttpResponse
-import io, base64
-import qrcode
+import io, base64,json, requests, qrcode
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.conf import settings
 from django.templatetags.static import static
 from django.views.decorators.cache import never_cache
-
 from .models import Rifa, Numero
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
+from django.urls import reverse
 
 def home(request):
-    mensaje = MensajeSorteo.objects.first()
-    slider_imagenes = SliderImagen.objects.filter(activo=True)
-    
     rifa = Rifa.objects.first()
-    total_numeros = rifa.total_numeros() if rifa else 1
-    numeros_vendidos = Numero.objects.filter(comprado=True).count()
-    porcentaje_vendidos = round((numeros_vendidos / total_numeros) * 100) if total_numeros else 0
+
+    if not rifa:
+        return render(request, 'app_rifas/home.html', {
+            'numeros_vendidos': 0,
+            'total_numeros': 0,
+            'porcentaje_vendidos': 0,
+            'slider_imagenes': [],
+            'mensaje': None,
+            'numeros_bendecidos': [],
+            'paquetes': [10, 15, 20, 30, 50, 100],
+        })
+
+    total_numeros = rifa.numero_final - rifa.numero_inicial + 1
+    numeros_vendidos = Numero.objects.filter(rifa=rifa, comprado=True).count()
+    porcentaje_vendidos = int((numeros_vendidos / total_numeros) * 100) if total_numeros > 0 else 0
 
     return render(request, 'app_rifas/home.html', {
-        'mensaje': mensaje,
-        'slider_imagenes': slider_imagenes,
-        'rifa': rifa,
-        'total_numeros': total_numeros,
         'numeros_vendidos': numeros_vendidos,
+        'total_numeros': total_numeros,
         'porcentaje_vendidos': porcentaje_vendidos,
+        'slider_imagenes': SliderImagen.objects.all(),
+        'mensaje': MensajeSorteo.objects.first(),
+        'numeros_bendecidos': NumeroBendecido.objects.filter(rifa=rifa).order_by('numero'),
+        'paquetes': [10, 15, 20, 30, 50, 100],
     })
 
 def crear_pedido(request):
@@ -83,7 +93,7 @@ def crear_pedido(request):
                 for numero in numeros:
                     NumeroSeleccionado.objects.create(orden=orden, numero=numero)
 
-                return redirect('detalle_pedido', orden.id)
+                return redirect('paypal_create', orden.id)
     else:
         participante_form = ParticipanteForm()
         orden_form = OrdenForm()
@@ -104,12 +114,16 @@ def crear_pedido(request):
 
 def detalle_pedido(request, pedido_id):
     pedido = get_object_or_404(Orden, pk=pedido_id)
-    numeros = NumeroSeleccionado.objects.filter(orden=pedido)
+    
+    if pedido.estado == 'pagado':
+        numeros = Numero.objects.filter(orden=pedido).order_by('numero')
+    else:
+        numeros = NumeroSeleccionado.objects.filter(orden=pedido).order_by('numero')
+
     return render(request, 'app_rifas/detalle_pedido.html', {
         'pedido': pedido,
         'numeros': numeros,
     })
-    
 
 def simular_pago(request, orden_id):
     orden = get_object_or_404(Orden, id=orden_id, estado='pendiente')
@@ -222,9 +236,112 @@ def selector_numeros(request, cantidad):
     rango_numeros = range(rifa.numero_inicial, rifa.numero_final + 1)
 
     return render(request, 'app_rifas/selector_numeros.html', {
-        'cantidad': int(cantidad),
-        'numero_min': rifa.numero_inicial,
-        'numero_max': rifa.numero_final,
-        'vendidos': list(vendidos),
-        'rango_numeros': rango_numeros,  # ← esto es clave
-    })
+    'cantidad': int(cantidad),
+    'numero_min': rifa.numero_inicial,
+    'numero_max': rifa.numero_final,
+    'vendidos': list(vendidos),
+})
+
+def paypal_create_order(request, orden_id):
+    orden = get_object_or_404(Orden, pk=orden_id)
+    rifa = Rifa.objects.first()
+    cantidad = NumeroSeleccionado.objects.filter(orden=orden).count()
+    total = float(rifa.precio_numero * cantidad)
+
+    response = requests.post(
+        'https://api-m.sandbox.paypal.com/v2/checkout/orders',
+        auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
+        headers={'Content-Type': 'application/json'},
+        json={
+            "intent": "CAPTURE",
+            "purchase_units": [{
+                "amount": {
+                    "currency_code": "USD",
+                    "value": f"{total:.2f}"
+                }
+            }],
+            "application_context": {
+                "return_url": request.build_absolute_uri(reverse('paypal_success')) + f"?orden_id={orden.id}",
+                "cancel_url": request.build_absolute_uri(reverse('paypal_cancel')) + f"?orden_id={orden.id}"
+            }
+        }
+    )
+
+    data = response.json()
+
+    # ✅ Buscar la URL de aprobación
+    for link in data.get("links", []):
+        if link.get("rel") == "approve":
+            return redirect(link["href"])
+
+    return JsonResponse({"error": "No se pudo generar el enlace de aprobación de PayPal."})
+
+@csrf_exempt
+def paypal_success_view(request):
+    orden_id = request.GET.get('orden_id')
+    orden = get_object_or_404(Orden, id=orden_id, estado='pendiente')
+
+    rifa = Rifa.objects.first()
+    numeros_seleccionados = NumeroSeleccionado.objects.filter(orden=orden)
+    cantidad_numeros = numeros_seleccionados.count()
+
+    orden.total = rifa.precio_numero * cantidad_numeros
+    orden.estado = 'pagado'
+    orden.pagado = True
+    orden.save()
+
+    for seleccionado in numeros_seleccionados:
+        numero = int(seleccionado.numero)
+        numero_obj, creado = Numero.objects.get_or_create(
+            numero=numero,
+            rifa=rifa,
+            defaults={
+                'comprado': True,
+                'participante': orden.participante,
+                'orden': orden,
+                'fecha_compra': timezone.now()
+            }
+        )
+        if not creado:
+            numero_obj.comprado = True
+            numero_obj.participante = orden.participante
+            numero_obj.orden = orden
+            numero_obj.fecha_compra = timezone.now()
+            numero_obj.save()
+
+    numeros_seleccionados.delete()
+    messages.success(request, f"✅ El pago de la orden #{orden.id} fue exitoso mediante PayPal.")
+    return redirect('detalle_pedido', pedido_id=orden.id)
+
+
+@csrf_protect
+def cancelar_pedido(request, pedido_id):
+    if request.method == 'POST':
+        orden = get_object_or_404(Orden, id=pedido_id, estado='pendiente')
+
+        # Liberar los números asignados a esta orden
+        numeros = Numero.objects.filter(orden=orden)
+        for numero in numeros:
+            numero.comprado = False
+            numero.participante = None
+            numero.orden = None
+            numero.fecha_compra = None
+            numero.save()
+
+        # Eliminar registros de NumeroSeleccionado
+        NumeroSeleccionado.objects.filter(orden=orden).delete()
+
+        # Eliminar la orden
+        orden.delete()
+
+        # Mostrar cancel.html en lugar de redirigir al home
+        return render(request, 'app_rifas/cancel.html')
+
+    messages.error(request, "❌ Acción no permitida.")
+    return redirect('home')
+
+def paypal_cancel_view(request):
+    pedido_id = request.GET.get("orden_id")
+    if pedido_id:
+        return redirect('detalle_pedido', pedido_id=pedido_id)
+    return redirect('home')
