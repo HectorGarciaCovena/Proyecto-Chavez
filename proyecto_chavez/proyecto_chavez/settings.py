@@ -27,8 +27,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-
-    # Tu app personalizada
     'app_rifas',
 ]
 
@@ -89,6 +87,7 @@ USE_TZ = True
 # PayPal Sandbox Credentials
 PAYPAL_CLIENT_ID = 'AS09xmbV5tXfYZCD60ZKWVTwSAXOtAiaiv5Oz1qgeiV9qIdLkvUov-9iC3nvdwIk3L3mC18ShVuUuqzy'
 PAYPAL_CLIENT_SECRET = 'EJUqdRWgwSGx1qD7hvyA2cSsQdvglCK7ARdbU8hnIbMfTRZqwk9-aq1yjolH_TI7wcd0ld4g3A4TT9A0'
+PAYPAL_API_BASE = 'https://api.sandbox.paypal.com'  # usar sandbox en pruebas
 
 # Archivos estáticos
 STATIC_URL = 'static/'
@@ -100,3 +99,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # URL base del sitio (para generación de enlaces absolutos o QR)
 SITE_URL = "http://127.0.0.1:8000"
+
+PAYPAL_API_BASE = "https://api.sandbox.paypal.com"

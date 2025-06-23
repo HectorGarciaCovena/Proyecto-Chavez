@@ -28,6 +28,16 @@
 
 <!-- Contenido -->
 <main class="container my-4">
+    <!-- Mostrar mensajes del sistema -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm rounded-3" role="alert" style="font-family: 'Poppins', sans-serif;">
+          <strong>{{ message|capfirst }}</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
     {% block content %}{% endblock %}
 </main>
 
@@ -36,10 +46,10 @@
 
 <!-- JS adicional para cada vista -->
 {% block extra_js %}
-
 {% endblock %}
 </body>
 </html>
+
 
 
 

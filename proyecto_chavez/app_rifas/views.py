@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.contrib import messages
 from .forms import ParticipanteForm, OrdenForm
 from .models import Orden, MensajeSorteo, NumeroSeleccionado, Numero, SliderImagen, Rifa, NumeroBendecido, Participante
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 import io, base64,json, requests, qrcode
 from django.template.loader import get_template
 from xhtml2pdf import pisa
@@ -14,6 +14,7 @@ from django.views.decorators.cache import never_cache
 from .models import Rifa, Numero
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.urls import reverse
+from .utils import get_paypal_access_token
 
 def home(request):
     rifa = Rifa.objects.first()
@@ -60,6 +61,7 @@ def crear_pedido(request):
 
         numeros_str = request.POST.get('numeros_favoritos', '')
         numeros = [n.strip() for n in numeros_str.split(',') if n.strip()]
+        metodo_pago = request.POST.get("metodo_pago", "paypal")
 
         if participante_form.is_valid() and orden_form.is_valid():
             if len(numeros) != cantidad:
@@ -88,12 +90,14 @@ def crear_pedido(request):
                 orden.participante = participante
                 orden.fecha = timezone.now()
                 orden.total = rifa.precio_numero * cantidad
+                orden.metodo_pago = metodo_pago
                 orden.save()
 
                 for numero in numeros:
                     NumeroSeleccionado.objects.create(orden=orden, numero=numero)
 
-                return redirect('paypal_create', orden.id)
+                url = reverse('paypal_create', kwargs={'orden_id': orden.id}) + f"?metodo={metodo_pago}"
+                return HttpResponseRedirect(url)
     else:
         participante_form = ParticipanteForm()
         orden_form = OrdenForm()
@@ -114,15 +118,28 @@ def crear_pedido(request):
 
 def detalle_pedido(request, pedido_id):
     pedido = get_object_or_404(Orden, pk=pedido_id)
-    
+
+    # Si el cliente decide cancelar desde esta vista
+    if request.method == 'POST' and 'cancelar' in request.POST and pedido.estado == 'pendiente':
+        # Liberar números seleccionados
+        NumeroSeleccionado.objects.filter(orden=pedido).delete()
+        pedido.delete()
+        return render(request, 'app_rifas/cancel.html')
+
+    # Obtener números según estado de la orden
     if pedido.estado == 'pagado':
         numeros = Numero.objects.filter(orden=pedido).order_by('numero')
     else:
         numeros = NumeroSeleccionado.objects.filter(orden=pedido).order_by('numero')
 
+    # Generar URL para continuar el pago (respetando método original)
+    metodo_param = "?metodo=tarjeta" if pedido.metodo_pago == "tarjeta" else ""
+    metodo_pago_url = reverse("paypal_create", args=[pedido.id]) + metodo_param
+
     return render(request, 'app_rifas/detalle_pedido.html', {
         'pedido': pedido,
         'numeros': numeros,
+        'metodo_pago_url': metodo_pago_url,
     })
 
 def simular_pago(request, orden_id):
@@ -242,39 +259,57 @@ def selector_numeros(request, cantidad):
     'vendidos': list(vendidos),
 })
 
+@csrf_exempt
 def paypal_create_order(request, orden_id):
-    orden = get_object_or_404(Orden, pk=orden_id)
-    rifa = Rifa.objects.first()
-    cantidad = NumeroSeleccionado.objects.filter(orden=orden).count()
-    total = float(rifa.precio_numero * cantidad)
+    orden = get_object_or_404(Orden, id=orden_id, estado="pendiente")
 
-    response = requests.post(
-        'https://api-m.sandbox.paypal.com/v2/checkout/orders',
-        auth=(settings.PAYPAL_CLIENT_ID, settings.PAYPAL_CLIENT_SECRET),
-        headers={'Content-Type': 'application/json'},
-        json={
-            "intent": "CAPTURE",
-            "purchase_units": [{
+    # Leer el método desde la URL (?metodo=tarjeta o ?metodo=paypal)
+    metodo = request.GET.get("metodo", "paypal")
+    landing_page = "BILLING" if metodo == "tarjeta" else "LOGIN"
+    access_token = get_paypal_access_token()
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {access_token}",
+    }
+
+    order_data = {
+        "intent": "CAPTURE",
+        "purchase_units": [
+            {
                 "amount": {
                     "currency_code": "USD",
-                    "value": f"{total:.2f}"
-                }
-            }],
-            "application_context": {
-                "return_url": request.build_absolute_uri(reverse('paypal_success')) + f"?orden_id={orden.id}",
-                "cancel_url": request.build_absolute_uri(reverse('paypal_cancel')) + f"?orden_id={orden.id}"
+                    "value": str(orden.total),
+                },
+                "description": f"Orden #{orden.id} - Participación en rifa",
             }
-        }
+        ],
+        "application_context": {
+            "brand_name": "DYL Sorteos",
+            "landing_page": landing_page,  # ← aquí se usa correctamente
+            "user_action": "PAY_NOW",
+            "return_url": request.build_absolute_uri(
+                reverse("paypal_success") + f"?orden_id={orden.id}"
+            ),
+            "cancel_url": request.build_absolute_uri(
+                reverse("paypal_cancel") + f"?orden_id={orden.id}"
+            ),
+        },
+    }
+
+    response = requests.post(
+        f"{settings.PAYPAL_API_BASE}/v2/checkout/orders",
+        headers=headers,
+        json=order_data,
     )
 
-    data = response.json()
-
-    # ✅ Buscar la URL de aprobación
-    for link in data.get("links", []):
-        if link.get("rel") == "approve":
-            return redirect(link["href"])
-
-    return JsonResponse({"error": "No se pudo generar el enlace de aprobación de PayPal."})
+    if response.status_code in [200, 201]:
+        data = response.json()
+        for link in data.get("links", []):
+            if link["rel"] == "approve":
+                return redirect(link["href"])
+        return JsonResponse({"error": "No se encontró el enlace de aprobación."}, status=400)
+    else:
+        return JsonResponse({"error": "Error al crear la orden en PayPal."}, status=400)
 
 @csrf_exempt
 def paypal_success_view(request):
@@ -344,4 +379,6 @@ def paypal_cancel_view(request):
     pedido_id = request.GET.get("orden_id")
     if pedido_id:
         return redirect('detalle_pedido', pedido_id=pedido_id)
-    return redirect('home')
+    return redirect('home')  # fallback
+
+
