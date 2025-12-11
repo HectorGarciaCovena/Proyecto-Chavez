@@ -1,0 +1,9 @@
+{% extends 'app_rifas/base.html' %}
+{% block content %}
+  <div class="container mt-5 text-center">
+    <h2 class="text-danger">❌ Pago cancelado</h2>
+    <p class="lead">No se realizó ningún cobro. Puedes intentarlo nuevamente.</p>
+    <a href="{% url 'home' %}" class="btn btn-outline-danger mt-3">Volver al inicio</a>
+  </div>
+{% endblock %}
+

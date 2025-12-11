@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="module">
+    <h2 style="margin-bottom: 20px;">
+        🔁 Re-generar Números Aleatorios
+    </h2>
+
+    <p style="font-size: 15px; color:#444;">
+        Esta acción eliminará <strong>todos los números actuales</strong> de esta rifa y generará nuevos números aleatorios.
+    </p>
+
+    <form method="POST" style="margin-top: 20px;">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label><strong>Cantidad de números a generar:</strong></label><br>
+            <input type="number" name="cantidad" required class="vTextField" style="width:200px;" min="1">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label><strong>Número de dígitos:</strong></label><br>
+            <input type="number" name="digitos" required class="vTextField" style="width:200px;" min="1" max="10">
+        </div>
+
+        <button type="submit" class="button" style="background:#c9302c; color:white;">
+            🔁 Re-generar Números
+        </button>
+    </form>
+
+    <br><br>
+
+    <a href="{% url 'admin:app_rifas_rifa_change' rifa.id %}"
+       class="button"
+       style="background:#337ab7; color:white;">
+        ⬅ Regresar a la rifa
+    </a>
+</div>
+{% endblock %}
+

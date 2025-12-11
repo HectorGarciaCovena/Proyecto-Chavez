@@ -1,0 +1,8 @@
+{% extends "admin/change_list.html" %}
+
+{% block content_title %}
+    <h2>
+        💰 <span style="color:green;">Total recaudado (pagado): ${{ total_recaudado|floatformat:2 }}</span>
+    </h2>
+    {{ block.super }}
+{% endblock %}

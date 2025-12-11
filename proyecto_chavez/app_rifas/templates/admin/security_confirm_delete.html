@@ -1,0 +1,25 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+
+<h2>⚠ Confirmar eliminación</h2>
+
+<p>Está por eliminar: <strong>{{ object }}</strong></p>
+<p>Para continuar, ingrese su contraseña:</p>
+
+<form method="POST">
+    {% csrf_token %}
+    <input type="password" name="password" class="vTextField" required placeholder="Contraseña de administrador">
+    <br><br>
+
+    <button type="submit" class="button btn-danger" style="background:#d9534f;color:white;">
+        🔒 Confirmar eliminación
+    </button>
+</form>
+
+<br>
+<a href="{{ cancel_url }}" class="button" style="background:#337ab7;color:white;">⬅ Cancelar</a>
+
+{% endblock %}
+

@@ -1,0 +1,12 @@
+{% extends "admin/change_list.html" %}
+
+{% block content_title %}
+  {{ title }}
+  {% if total_pagado %}
+    <div style="margin-top: 10px;">
+      <strong style="font-size: 1.1rem; color: green;">
+        💰 Total recaudado (pagado): ${{ total_pagado|floatformat:2 }}
+      </strong>
+    </div>
+  {% endif %}
+{% endblock %}

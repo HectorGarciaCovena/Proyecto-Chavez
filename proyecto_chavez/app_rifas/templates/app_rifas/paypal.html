@@ -1,0 +1,13 @@
+{% extends 'app_rifas/base.html' %}
+{% block content %}
+  <div class="container mt-5 text-center">
+    <h2 class="mb-3">Simular pago con PayPal</h2>
+    <form action="{% url 'paypal_create' orden.id %}" method="post">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-primary">
+        💳 Pagar ${{ orden.total }} con PayPal
+      </button>
+    </form>
+  </div>
+{% endblock %}
+
