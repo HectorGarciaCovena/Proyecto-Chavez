@@ -1,0 +1,28 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block object-tools %}
+  {{ block.super }}
+  {% if change %}
+    <li>
+      {% if not hay_numeros %}
+        <a class="button"
+           href="{% url 'admin:generar_numeros' original.id %}"
+           style="background-color:#3b82f6; color:white; padding:6px 12px; border-radius:5px;">
+           🔢 Generar Números
+        </a>
+      {% else %}
+        <a class="button"
+           href="#"
+           style="background-color:#cccccc; color:#666; padding:6px 12px; border-radius:5px; pointer-events:none; opacity:0.6;">
+           🔒 Generar Números
+        </a>
+        <a class="button"
+           href="{% url 'admin:regenerar_numeros' original.id %}"
+           style="background-color:rgb(42, 165, 114); color:white; padding:6px 12px; border-radius:5px;">
+           🔁 Regenerar Números
+        </a>
+      {% endif %}
+    </li>
+  {% endif %}
+{% endblock %}

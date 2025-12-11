@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Boleto de Rifa</title>
+
+    <!-- CSS exclusivo del boleto -->
+    <link rel="stylesheet" href="{% static 'app_rifas/css/boleto_pdf.css' %}">
+</head>
+<body class="boleto-page">
+    <div class="boleto">
+        <div class="logo">
+            <img src="{{ logo_url }}" alt="Logo Empresa">
+        </div>
+
+        <div class="titulo-box">
+            <h2>{{ rifa.titulo }}</h2>
+            <p>{{ rifa.descripcion }}</p>
+        </div>
+
+        <h4>BOLETO DE PARTICIPACIÓN</h4>
+
+        <div class="datos">
+            <p><strong>Cliente:</strong> {{ participante.nombre }} {{ participante.apellido }}</p>
+            <p><strong>Cédula:</strong> {{ participante.cedula }}</p>
+            <p><strong>Fecha de compra:</strong> {{ orden.fecha|date:"d/m/Y H:i" }}</p>
+            <p><strong>Método de pago:</strong> {{ orden.metodo_pago|capfirst }}</p>
+            <p><strong>Orden ID:</strong> {{ orden.id }}</p>
+        </div>
+
+        <div class="numeros-box">
+            <p>Números adquiridos:</p>
+            {% for n in numeros %}
+                <span>{{ n.numero }}</span>{% if not forloop.last %} - {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="qr">
+            <img src="data:image/png;base64,{{ qr_base64 }}" width="120" height="120" alt="QR Código">
+            <div class="verificacion">
+                Verifica en línea: Orden #{{ orden.id }}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

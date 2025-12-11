@@ -1,0 +1,82 @@
+{% extends 'app_rifas/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="text-center mb-4">Detalle del Pedido #{{ pedido.id }}</h2>
+
+    {% if pedido.estado == "pagado" %}
+        <div class="alert alert-success text-center">
+            ✅ Esta orden ha sido <strong>PAGADA</strong>. Tu boleto ya está disponible.
+        </div>
+    {% else %}
+        <div class="alert alert-warning text-center">
+            ⚠️ Tu pedido está <strong>PENDIENTE DE VALIDACIÓN</strong>.
+            <br>Envía tu comprobante al WhatsApp oficial para completar tu compra.
+        </div>
+    {% endif %}
+
+    <!-- Datos del participante -->
+    <div class="card mb-4">
+        <div class="card-header">Información del Participante</div>
+        <div class="card-body">
+            <p><strong>Nombre:</strong> {{ pedido.participante.nombre }} {{ pedido.participante.apellido }}</p>
+            <p><strong>Email:</strong> {{ pedido.participante.email }}</p>
+            <p><strong>Teléfono:</strong> {{ pedido.participante.telefono }}</p>
+            <p><strong>Dirección:</strong> {{ pedido.participante.direccion }}, 
+                {{ pedido.participante.ciudad }}, {{ pedido.participante.provincia }}, {{ pedido.participante.pais }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Detalles -->
+    <div class="card mb-4">
+        <div class="card-header">Detalles del Pedido</div>
+        <div class="card-body">
+            <p><strong>Método de Pago:</strong> {{ pedido.metodo_pago }}</p>
+            <p><strong>Estado:</strong>
+                {% if pedido.estado == 'pendiente' %}
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                {% else %}
+                    <span class="badge bg-success">Pagado</span>
+                {% endif %}
+            </p>
+            <p><strong>Fecha:</strong> {{ pedido.fecha|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <!-- Números -->
+    <div class="card mb-4">
+        <div class="card-header">Números Seleccionados</div>
+        <div class="card-body">
+            {% if numeros %}
+                <ul class="list-group">
+                    {% for numero in numeros %}
+                        <li class="list-group-item">{{ numero.numero }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No hay números asignados.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if pedido.estado == "pagado" %}
+        <div class="text-end mb-3">
+            <a class="btn btn-primary" target="_blank" href="{% url 'generar_boleta' pedido.id %}">
+                🖨️ Descargar Boleto
+            </a>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            📲 <h2>Envía tu comprobante al 0999851126 para validar tu compra.</h2>
+        </div>
+    {% endif %}
+
+    <div class="text-center mt-3">
+        <a href="{% url 'home' %}" class="btn btn-secondary">Volver al Inicio</a>
+    </div>
+
+</div>
+{% endblock %}
+

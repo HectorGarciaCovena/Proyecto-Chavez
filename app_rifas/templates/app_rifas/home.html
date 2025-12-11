@@ -1,0 +1,139 @@
+{% extends 'app_rifas/base.html' %}
+{% load static %}
+{% load descripcion_tags %}
+
+{% block title %}Inicio - Rifas Chavez{% endblock %}
+
+{% block content %}
+
+{% if mensaje %}
+  <div class="alert alert-warning text-center my-4" role="alert">
+    <h2>{{ mensaje.mensaje|linebreaks }}</h2>
+  </div>
+{% endif %}
+
+{% if rifa and rifa.descripcion %}
+  <div class="container mt-4">
+    <div class="card shadow-sm border border-primary rounded-3 bg-light">
+      <div class="card-body text-center">
+        <h4 class="text-primary fw-bold mb-3">
+          <i class="bi bi-info-circle-fill"></i> Detalles del Premio
+        </h4>
+        <p class="mb-0" style="font-size: 1.1rem;">
+          {{ rifa.descripcion|format_descripcion|safe }}
+        </p>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- =============== ALERTA CUANDO NO EXISTE RIFA ================= -->
+{% if not rifa %}
+<div class="container mt-4">
+  <div class="alert alert-info text-center py-4 shadow-sm border border-primary">
+    <h3 class="fw-bold mb-2">📢 No hay rifas activas por el momento</h3>
+    <p class="mb-0">Estamos preparando una nueva rifa. ¡Vuelve pronto!</p>
+  </div>
+</div>
+{% endif %}
+
+<!-- ==================== SLIDER ==================== -->
+<div id="carouselExample" class="carousel slide mt-4" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    {% for imagen in slider_imagenes %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        <img src="{{ imagen.imagen.url }}" class="d-block w-auto mx-auto" alt="{{ imagen.titulo }}">
+      </div>
+    {% empty %}
+      <div class="carousel-item active">
+        <img src="{% static 'app_rifas/img/default_slide.jpg' %}" class="d-block w-100" alt="Sin imágenes">
+      </div>
+    {% endfor %}
+  </div>
+
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+    <span class="visually-hidden">Anterior</span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+    <span class="visually-hidden">Siguiente</span>
+  </button>
+</div>
+
+<!-- ================== PROGRESO ================== -->
+{% if rifa %}
+<div class="card my-4">
+  <div class="card-body">
+    <h5 class="card-title text-center">Cantidades Limitadas</h5>
+    <p class="text-center">
+      <strong>Números vendidos:</strong> <strong>{{ numeros_vendidos }}</strong> de <strong>{{ total_numeros }}</strong>
+    </p>
+    <div class="progress" style="height: 25px;">
+      <div class="progress-bar bg-success"
+           style="width: {{ porcentaje_vendidos }}%;"
+           aria-valuenow="{{ porcentaje_vendidos }}"
+           aria-valuemin="0"
+           aria-valuemax="100">
+        {{ porcentaje_vendidos }}%
+      </div>
+    </div>
+
+    <br>
+    <p class="text-center">
+      El auto y las motos se jugarán una vez vendida la totalidad de los números.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<!-- =================== ¿CÓMO PARTICIPAR? =================== -->
+<section class="premios-section text-center my-5">
+  <h3 class="fw-bold text-uppercase">¿Cómo participar?</h3>
+  <div class="how-to mt-3 text-muted">
+    <p>1. Selecciona el paquete de números que desees...</p>
+    <p>2. Serás redirigido a una página donde seleccionarás tu forma de pago.</p>
+    <p>3. Una vez realizado el pago, se asignarán tus números automáticamente.</p>
+  </div>
+
+  <a href="#" class="btn btn-dark mt-4 px-4 py-2 fw-bold text-uppercase">Video tutorial de compra</a>
+</section>
+
+<!-- =================== PAQUETES =================== -->
+<section class="container my-5 text-center">
+  <h2 class="fw-bold text-uppercase">¡Adquiere tus números!</h2>
+  <p class="text-uppercase text-muted">Valor de la unidad: $100</p>
+
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="bg-light p-5 text-center rounded border border-3 border-dark">
+        <h4 class="fw-bold fst-italic text-uppercase">¿Cuántos números deseas?</h4>
+        <p class="text-muted mb-4">Agrega la cantidad</p>
+
+        {% if rifa %}
+        <!-- FORMULARIO SOLO SI EXISTE RIFA -->
+        <form method="get" action="{% url 'crear_pedido' %}"
+              class="d-inline-flex justify-content-center align-items-center gap-3 flex-wrap">
+          <input type="number" min="1" name="cantidad" class="form-control custom-input" placeholder="Cantidad" required>
+          <button type="submit" class="btn btn-dark text-uppercase fw-bold px-4">Comprar</button>
+        </form>
+        {% else %}
+        <!-- BOTÓN DESHABILITADO -->
+        <button class="btn btn-secondary text-uppercase fw-bold px-4" disabled>
+          Comprar no disponible
+        </button>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Limpiar selección previa al cargar el home
+  window.addEventListener('DOMContentLoaded', () => {
+    localStorage.removeItem('numeros_seleccionados');
+  });
+</script>
+
+{% endblock %}

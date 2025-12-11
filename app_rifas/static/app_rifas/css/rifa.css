@@ -1,0 +1,26 @@
+.custom-admin-actions {
+    margin-top: 20px;
+}
+
+.button-success {
+    background: #28a745 !important;
+    color: white !important;
+    padding: 8px 14px;
+    border-radius: 4px;
+}
+
+.button-danger {
+    background: #d9534f !important;
+    color: white !important;
+    padding: 8px 14px;
+    border-radius: 4px;
+}
+
+.button-cancel {
+    background: #6c757d !important;
+    color: white !important;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-left: 10px;
+}
+

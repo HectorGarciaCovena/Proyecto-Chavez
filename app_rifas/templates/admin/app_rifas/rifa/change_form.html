@@ -1,0 +1,71 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block content %}
+
+{% if rifa and rifa.id %}
+
+<!-- ======= ESTADÍSTICAS DE LA RIFA ======= -->
+{% if hay_numeros %}
+<div style="margin-bottom: 25px;">
+
+    <h2 style="margin-bottom: 15px; color:#2c3e50;">
+        📊 Estadísticas de la Rifa
+    </h2>
+
+    <div style="
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    ">
+        <div style="background:#f8f9fa;border:1px solid #dfe6e9;padding:15px;border-radius:8px;text-align:center;">
+            <h3 style="margin: 0;">🧮 Total</h3>
+            <p style="font-size:24px;font-weight:bold;">{{ total_numeros }}</p>
+        </div>
+
+        <div style="background:#e8f5e9;border:1px solid #c8e6c9;padding:15px;border-radius:8px;text-align:center;">
+            <h3 style="margin: 0;">🟢 Disponibles</h3>
+            <p style="font-size:24px;font-weight:bold;">{{ disponibles }}</p>
+        </div>
+
+        <div style="background:#ffebee;border:1px solid #ffcdd2;padding:15px;border-radius:8px;text-align:center;">
+            <h3 style="margin: 0;">🔴 Vendidos</h3>
+            <p style="font-size:24px;font-weight:bold;">{{ vendidos }}</p>
+        </div>
+
+        <div style="background:#e3f2fd;border:1px solid #bbdefb;padding:15px;border-radius:8px;text-align:center;">
+            <h3 style="margin: 0;">📈 % Vendido</h3>
+            <p style="font-size:24px;font-weight:bold;">{{ porcentaje }}%</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- BOTONES -->
+<div class="submit-row">
+
+    {% if not hay_numeros %}
+        <a class="button"
+           style="background:#28a745;color:white;"
+           href="{% url 'admin:app_rifas_rifa_generar_numeros' rifa.id %}">
+            ➕ Generar números aleatorios
+        </a>
+    {% endif %}
+
+    {% if hay_numeros %}
+        <a class="button"
+           style="background:#d9534f;color:white;"
+           href="{% url 'admin:app_rifas_rifa_regenerar_numeros' rifa.id %}">
+            🔁 Re-generar números aleatorios
+        </a>
+    {% endif %}
+
+</div>
+
+{% endif %}
+
+{{ block.super }}
+
+{% endblock %}
+

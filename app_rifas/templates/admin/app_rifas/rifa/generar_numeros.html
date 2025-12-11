@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div class="module">
+    <h2 style="margin-bottom: 20px;">
+        ➕ Generar Números Aleatorios
+    </h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div style="margin-bottom: 15px;">
+            <label><strong>Cantidad de números a generar:</strong></label><br>
+            <input type="number" name="cantidad" required class="vTextField" style="width:200px;" min="1">
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label><strong>Número de dígitos:</strong></label><br>
+            <input type="number" name="digitos" required class="vTextField" style="width:200px;" min="1" max="10">
+        </div>
+
+        <button type="submit" class="button" style="background:#28a745; color:white;">
+            ➕ Generar Números
+        </button>
+    </form>
+
+    <br><br>
+
+    <a href="{% url 'admin:app_rifas_rifa_change' rifa.id %}"
+       class="button"
+       style="background:#337ab7; color:white;">
+        ⬅ Regresar a la rifa
+    </a>
+</div>
+{% endblock %}
+
